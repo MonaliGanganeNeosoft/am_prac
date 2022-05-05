@@ -1,0 +1,172 @@
+const express = require("express");
+const router = express.Router();
+
+const nodemailer = require("nodemailer");
+const connectDb = require("../db/connectDb");
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+const jwt = require("jsonwebtoken");
+const jwtSecret = "monimoni345555555";
+
+const bcrypt = require("bcryptjs");
+require("dotenv").config();
+const url = "http://localhost:3000/confirm";
+connectDb();
+
+const { userModel } = require("../models/userSchema");
+
+const autenticateToken = async (req, res, next) => {
+  const authHeader = await req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  console.log(token + "///");
+  if (token == null) {
+    console.log("token not match");
+  } else {
+    jwt.verify(token, jwtSecret, (err, data) => {
+      if (err) {
+        console.log("Token incorrect");
+      } else {
+        console.log("Match");
+        next();
+      }
+    });
+  }
+};
+
+router.get("/getall", (req, res) => {
+  userModel.find({}, (err, data) => {
+    if (err) throw err;
+    res.send(data);
+  });
+});
+
+router.get("/gets", autenticateToken, (req, res) => {
+  console.log("get user data");
+});
+
+router.post("/adduser", (req, res) => {
+  console.log(req.body);
+  let ins = new userModel({
+    fname: req.body.fname,
+    lname: req.body.lname,
+    email: req.body.email,
+    password: req.body.password,
+    phoneNumber: req.body.phoneNumber,
+    gender: req.body.gender,
+    photo: req.body.photo,
+    isVerified: false,
+  });
+  ins.save((err) => {
+    if (err) {
+      res.json({ msg: "oops! User already exist pls login again", err: 1 });
+    } else {
+      rand = Math.floor(Math.random() * 100 + 54);
+      host = req.get("host");
+      link =
+        "http://" + req.get("host") + "/api" + "/users" + "/verify?id=" + rand;
+      console.log(link);
+      let smtpTransport = nodemailer.createTransport({
+          service: "gmail",
+          port: 465,
+          auth: {
+            user: process.env.email,
+            pass: process.env.password,
+          },
+        }),
+        mailOptions = {
+          to: req.body.email,
+          subject: "pls confirm email account",
+          html: `pls click here to verify <a href=${link}>verify email</a>`,
+        };
+      console.log(mailOptions);
+      smtpTransport.sendMail(mailOptions, function (error, res) {
+        if (error) {
+          console.log(error);
+          res.send("error");
+        } else {
+          console.log("Msg sent: ");
+          res.json({
+            success: true,
+            status_code: 200,
+            msg: "rsg done",
+            err: 0,
+          });
+        }
+      });
+    }
+  });
+});
+
+router.get("/verify", function (req, res) {
+  console.log(req.protocol + ":/" + req.get("host"));
+  rand = Math.floor(Math.random() * 100 + 54);
+  host = req.get("host");
+  if (req.protocol + "://" + req.get("host") == "http://" + host) {
+    console.log("domail is match info is from authenticaticon email");
+    if (req.query.id == rand) {
+      console.log("email is verified");
+      res.end(`<h1>Email ${mailOptions.to} is been Successfully verified
+            <a href="http://localhost:3000/login" >Login here now</a>
+            <p>Thank you,</p>
+            <p>Neostore</p>
+            
+            `);
+      userModel.updateOne(
+        { email: mailOptions.to },
+        { $set: { isVerified: true } },
+        function (err, docs) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log("updated Docs: ", docs);
+          }
+        }
+      );
+    } else {
+      console.log("email is not verified");
+      res.end("<h1>OOPs link is expired...</h1>");
+    }
+  } else {
+    res.end("<h1>req is from unknown source</h1>");
+  }
+});
+
+router.post("/getuser", (req, res) => {
+  userModel.findOne({ email: req.body.email }, (err, data) => {
+    console.log(bcrypt.compareSync(req.body.password, data.password));
+    if (err) {
+      res.send("its error");
+    } else if (data == null) {
+      res.json({ err: 1, msg: "pls write correct email id" });
+    } else if (data.isVerified == false) {
+      res.json({ err: 1, msg: "pls verify your email address" });
+    } else if (bcrypt.compareSync(req.body.password, data.password)) {
+      let payload = {
+        email: req.body.email,
+        fname: data.fname,
+        lname: data.lname,
+        gender: data.gender,
+        phoneNumber: data.phoneNumber,
+        password: data.password,
+        photo: data.photo,
+        id: data._id,
+        cartData: data.cartData,
+        provider: data.provider,
+      };
+      const token = jwt.sign(payload, jwtSecret, { expiresIn: 36000 });
+      res.json({
+        err: 0,
+        success: true,
+        status_code: 200,
+        msg: `log ${data.fname}sucess`,
+        token: token,
+      });
+    } else {
+      console.log("hii");
+      res.json({ err: 1, msg: "pls write correct psd" });
+    }
+  });
+});
+module.exports = router;
