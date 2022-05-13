@@ -166,4 +166,32 @@ router.post("/getuser", (req, res) => {
     }
   });
 });
+router.post("/checksocial", (req, res) => {
+  userModel.findOne({ email: req.body.email }, (err, data) => {
+    if (data == null) {
+      res.json({
+        err: 1,
+        message: "we cannot found account with email address",
+      });
+    } else if (data.password != null) {
+      if (bcrypt.compareSync(req.body.password, data.password)) {
+        res.json({ err: 0 });
+      } else {
+        res.json({
+          err: 1,
+          message: "pls write correct password",
+          provider: data.provider,
+        });
+      }
+    } else if (data.provider == "social") {
+      res.json({
+        err: 1,
+        message: "hey user you are social user",
+        provider: data.provider,
+      });
+    } else {
+      res.json({ err: 0 });
+    }
+  });
+});
 module.exports = router;
