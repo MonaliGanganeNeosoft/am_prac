@@ -4,6 +4,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "./Components/Login";
 import PageNotfound from "./Components/PageNotfound";
 import Cart from "./Components/Cart";
+import SelectAddress from "./Components/SelectAddress";
 
 const Dashboard = lazy(() => import("./Components/Dashboard"));
 const Navbars = lazy(() => import("./Components/Navbars"));
@@ -29,7 +30,9 @@ function App() {
           <Route path="/register" element={<Register />} />
 
           <Route path="/login" element={<Login />} />
+
           <Route path="/cart" element={<Cart />} />
+          <Route path="/selectAddress" element={<SelectAddress />} />
           <Route path="*" element={<PageNotfound />} />
         </Routes>
       </Suspense>
