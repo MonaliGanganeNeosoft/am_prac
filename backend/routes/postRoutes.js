@@ -1,4 +1,7 @@
 const express = require("express");
+const jwt = require("jsonwebtoken");
+const jwtSecret = "asd889asdas5656asdas887";
+const bcrypt = require("bcryptjs");
 
 const router = express.Router();
 
@@ -8,9 +11,6 @@ const connectDb = require("../db/connectDb");
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-const jwt = require("jsonwebtoken");
-const jwtSecret = "asd889asdas5656asdas887";
-const bcrypt = require("bcryptjs");
 require("dotenv").config();
 
 connectDb();
