@@ -16,6 +16,7 @@ require("dotenv").config();
 connectDb();
 
 const { userModel } = require("../models/userSchema");
+const productModel = require("../models/productSchema");
 
 const autenticateToken = async (req, res, next) => {
   const authHeader = await req.headers["authorization"];
@@ -194,4 +195,54 @@ router.post("/checksocial", (req, res) => {
     }
   });
 });
+router.get("/getproducts", (req, res) => {
+  productModel.find({}, (err, data) => {
+    if (err) throw err;
+    res.send(data);
+  });
+});
+router.post("/addcart", (req, res) => {
+  // console.log(req.body)
+  userModel.updateOne(
+    { _id: req.body.id },
+    { $set: { cartData: req.body.cartData } },
+    function (err, docs) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log("Updated Docs : ", docs);
+      }
+    }
+  );
+});
+router.post("/updatecart", (req, res) => {
+  console.log(req.body);
+  userModel.updateOne(
+    { _id: req.body.id },
+    { $set: { cartData: req.body.cartData } },
+    function (err, docs) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log("Updated Docs :", docs);
+        userModel.findOne({ _id: req.body.id }, (err, data) => {
+          let payload = {
+            email: data.email,
+            fname: data.fname,
+            lname: data.lname,
+            gender: data.gender,
+            phoneNumber: data.phoneNumber,
+            password: data.password,
+            photo: data.photo,
+            id: data._id,
+            cartData: data.cartData,
+          };
+          const token = jwt.sign(payload, jwtSecret, { expiresIn: 360000 });
+          res.send(token);
+        });
+      }
+    }
+  );
+});
+
 module.exports = router;

@@ -3,9 +3,12 @@ import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "./Components/Login";
 import PageNotfound from "./Components/PageNotfound";
+import Cart from "./Components/Cart";
+
 const Dashboard = lazy(() => import("./Components/Dashboard"));
 const Navbars = lazy(() => import("./Components/Navbars"));
 const Register = lazy(() => import("./Components/Register"));
+
 function App() {
   return (
     <>
@@ -26,6 +29,7 @@ function App() {
           <Route path="/register" element={<Register />} />
 
           <Route path="/login" element={<Login />} />
+          <Route path="/cart" element={<Cart />} />
           <Route path="*" element={<PageNotfound />} />
         </Routes>
       </Suspense>
