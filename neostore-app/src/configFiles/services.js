@@ -19,3 +19,15 @@ export function getUser(data) {
   console.log("hey user");
   return axios.post(`${MAIN_url}/users/getuser`, data);
 }
+export function getProducts() {
+  console.log("pro");
+  return axios.get(`${MAIN_url}/users/getproducts`);
+}
+export function gets() {
+  return axios.get(`${MAIN_url}/users/gets`, {
+    headers: { authorization: `Bearer ${localStorage.getItem("_token")}` },
+  });
+}
+export function updateCart(data) {
+  return axios.post(`${MAIN_url}/users/updatecart`, data);
+}
